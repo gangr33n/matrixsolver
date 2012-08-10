@@ -1,7 +1,7 @@
 /**
  * @file
  * @author Wayne Madden <s3197676@student.rmit.edu.au>
- * @version 0.1
+ * @version 0.2
  *
  * @section LICENSE
  * Free to re-use and reference from within code as long as the original owner
@@ -22,7 +22,10 @@
  * @param matrixSide The size of eeach dimension of matrix A and the larger
  * dimension of both X and B
  */
-void displayEquation(float** A, float* X, float* B, int matrixSide)
+
+#include "Matrix.h"
+
+void displayEquation(float* A, float* X, float* B, int matrixSide)
 {
    int i, j;
 
@@ -31,7 +34,7 @@ void displayEquation(float** A, float* X, float* B, int matrixSide)
       /*output matrix a, one line at a time*/
       cerr << "[ ";
       for (j = 0; j < matrixSide; j++)
-         cerr << setw(10) << setprecision(2) << A[i][j];
+         cerr << setw(10) << setprecision(2) << A[i * matrixSide + j];
       cerr << " ]";
       
       /*output multiplication sign, centred vertically*/
@@ -46,4 +49,6 @@ void displayEquation(float** A, float* X, float* B, int matrixSide)
       /*output matrix b, one line at a time*/
       cerr << "[ " << setw(10) << setprecision(2) << B[i] << " ]" << endl;
    }
+
+   cerr << endl;
 }

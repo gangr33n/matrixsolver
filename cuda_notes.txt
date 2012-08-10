@@ -1,0 +1,20 @@
+cudaMalloc((void**) &ptr_to_device_memory, size_in_bytes);
+
+cudaMemcpy(source_memory_pointer, destination_memory_pointer, size_in_bytes, constant_type);
+constant_type: cudaMemcpyDeviceToHost, cudaMemcpyHostToDevice, cudaMemcpyHostToHost, cudaMemcpyDeviceToDevice, cudaMemcpyDefault (same as memcpy)
+
+cudaDeviceSynchronize()
+*Blocks until the device has completed all preceding requested tasks. cudaDeviceSynchronize() returns an error if one of the preceding tasks has failed. If the cudaDeviceScheduleBlockingSync flag was set for this device, the host thread will block until the device has finished its work.
+
+*All operations return status - this should be compared to cudaSuccess. If this does not match, there was an error. The list of errors is quite extensive.
+
+Thread: index to be used when accessing array element per thread - streaming processor
+Block: group of threads - multiprocessor (many SP)
+Grid: group of blocks - no sync/sharing - gpu (many MP)
+
+<<<gridDim, blockDim>>>: Set the dimension (size) of blocks and grids i.e. x blocks in each of y grids
+
+dim3: struct with x, y, z properties
+blockDim: contains dimensions of block, number of threads per block
+GridDim: number of blocks per grid
+threadId: used to assertain index for performing concurrent operations on array on gpu
