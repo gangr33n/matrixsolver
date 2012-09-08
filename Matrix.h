@@ -1,7 +1,7 @@
 /**
  * @file
  * @author Wayne Madden <s3197676@student.rmit.edu.au>
- * @version 0.2
+ * @version 0.3
  *
  * @section LICENSE
  * Free to re-use and reference from within code as long as the original owner

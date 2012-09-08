@@ -1,7 +1,7 @@
 /**
  * @file
  * @author Wayne Madden <s3197676@student.rmit.edu.au>
- * @version 0.2
+ * @version 0.3
  *
  * @section LICENSE
  * Free to re-use and reference from within code as long as the original owner
@@ -17,5 +17,5 @@
 #include "device_launch_parameters.h"
 
 /*kernels to be executed on gpu*/
-__global__ void kernel_forSub(float*, float*);
-__global__ void kernel_backSub(float*, float*, float*);
+__global__ void kernel_forElim(float*, float*, int);
+__global__ void kernel_backSub(float*, float*, float*, int);

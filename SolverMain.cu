@@ -1,7 +1,7 @@
 /**
  * @file
  * @author Wayne Madden <s3197676@student.rmit.edu.au>
- * @version 0.2
+ * @version 0.3
  *
  * @section LICENSE
  * Free to re-use and reference from within code as long as the original owner
@@ -25,27 +25,35 @@ int main(int argc, char* argv[])
    float *hA, *dA;
    float *hX, *dX;
    float *hB, *dB;
-   float n, t;
-   int i, j, k;
+   int i, j;
    int matrixSide;
    int status;
    FILE* fp;
-   char line[BUFFER_SIZE]; /*EXISTING ISSUE - SPACE IS ALLOCATED ON DEVICE, CAN'T BE TOO LARGE*/
+   char line[BUFFER_SIZE];
    char* token;
+   //LARGE_INTEGER start, end, freq;
+   int n, gridCount, blockCount, threads;
 
    /*validate arguments*/
    if (argc != 4)
    {
       cout << "Invalid arguments! Press enter to continue...";
       cin.ignore(1);
+	  exit(EXIT_FAILURE);
    }
 
+   /*necesary for microsecond accuracy*/
+   //QueryPerformanceFrequency(&freq);
+
+   /*1. init*/
+   //QueryPerformanceCounter(&start);
    /*set device*/
    status = cudaSetDevice(0);
    if (status != cudaSuccess)
    {
       cout << "No valid device found! Press enter to continue...";
       cin.ignore(1);
+	  exit(EXIT_FAILURE);
    }
 
    /*read command line input*/
@@ -105,38 +113,69 @@ int main(int argc, char* argv[])
    fclose(fp);
 
    /*copy host memory to device*/
-   cudaMemcpy(dA, hA, sizeof(float) * matrixSide * matrixSide, cudaMemcpyHostToDevice);
+   cudaMemcpy(dA, hA, sizeof(float) * matrixSide * matrixSide,
+                                                      cudaMemcpyHostToDevice);
    cudaMemcpy(dB, hB, sizeof(float) * matrixSide, cudaMemcpyHostToDevice);
 
+   //QueryPerformanceCounter(&end);
+   //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart << ",";
+
    /*first display*/
-   displayEquation(hA, hX, hB, matrixSide);
+   displayEquation(hA, NULL, hB, matrixSide);
 
-   /*forward substitution*/
-   kernel_forSub<<<1, matrixSide>>>(dA, dB);
+   /*calculate threads per block per grid. blockDim is optimally a multiple of
+   32 (warp size) to keep sm busy (better, 64 as two warps can be interleaved)*/
+   n = 2;
+   threads = (matrixSide / (WARP_SIZE * n) + 1) * (WARP_SIZE * n);
+   do
+   {
+      gridCount = threads / (WARP_SIZE * n);
+      blockCount = threads / gridCount;
+      n += 2;
+   } while (gridCount > GRID_MAX);
+   if (blockCount >= 768)
+   {
+      cout << "Matrix is too large for this solver! Press enter to continue...";
+      cin.ignore(1);
+      exit(EXIT_FAILURE);
+   }
+
+   /*2. forward elimination*/
+   //QueryPerformanceCounter(&start);
+   kernel_forElim<<<gridCount, blockCount>>>(dA, dB, matrixSide);
    status = cudaDeviceSynchronize();
    if (status != cudaSuccess)
    {
-      cout << "Unable to complete forward substitution! Press enter to continue...";
-      cin.ignore(1);
-	  exit(EXIT_FAILURE);
+      cout << "Unable to complete forward substitution! Press enter to"
+                                                               " continue...";
+	  cin.ignore(1);
+      exit(EXIT_FAILURE);
    }
+   //QueryPerformanceCounter(&end);
+   //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart << ",";
 
-   /*backwards substitution*/
-   kernel_backSub<<<1, matrixSide>>>(dA, dX, dB); /*UP YOURS VISUAL STUDIO THE EXTENSION SHOULD NOT MATTER*/
+   /*3. backwards substitution*/
+   //QueryPerformanceCounter(&start);
+   kernel_backSub<<<gridCount, blockCount>>>(dA, dX, dB, matrixSide);
    status = cudaDeviceSynchronize();
    if (status != cudaSuccess)
    {
-      cout << "Unable to complete backward substitution! Press enter to continue...";
+      cout << "Unable to complete backward substitution! Press enter to"
+                                                               " continue...";
       cin.ignore(1);
 	  exit(EXIT_FAILURE);
    }
+   //QueryPerformanceCounter(&end);
+   //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart << ",";
 
-   /*copy host memory to device*/
+   /*copy device memory to host*/
    cudaMemcpy(hX, dX, sizeof(float) * matrixSide, cudaMemcpyDeviceToHost);
 
    /*display the solved values of matrix X*/
    displayEquation(hA, hX, hB, matrixSide);
    
+   /*4. cleanup*/
+   //QueryPerformanceCounter(&start);
    /*free host memory*/
    delete[] hA;
    delete[] hX;
@@ -149,6 +188,9 @@ int main(int argc, char* argv[])
 
    /*reset device for profiling tool traces*/
    cudaDeviceReset();
+
+   //QueryPerformanceCounter(&end);
+   //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart;
 
    /*prompt to continue - to allow the user to read output before exiting*/
    cout << "Press enter to continue...";
