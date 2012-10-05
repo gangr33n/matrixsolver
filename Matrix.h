@@ -15,7 +15,13 @@
 #include <iostream>
 #include <iomanip>
 
+#include "Kernel.h"
+
 using namespace std;
 
 /*function prototypes*/
 void displayEquation(float*, float*, float*, int);
+
+void gaussianElimination(float*, float*, float*, int, int, int);
+void galerkin(float*, float*, float*, int, int, int);
+void rungekutta(float*, float*, float*, int, int, int);

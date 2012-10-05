@@ -140,31 +140,9 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
    }
 
-   /*2. forward elimination*/
+   /*2. solve matrix*/
    //QueryPerformanceCounter(&start);
-   kernel_forElim<<<gridCount, blockCount>>>(dA, dB, matrixSide);
-   status = cudaDeviceSynchronize();
-   if (status != cudaSuccess)
-   {
-      cout << "Unable to complete forward substitution! Press enter to"
-                                                               " continue...";
-	  cin.ignore(1);
-      exit(EXIT_FAILURE);
-   }
-   //QueryPerformanceCounter(&end);
-   //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart << ",";
-
-   /*3. backwards substitution*/
-   //QueryPerformanceCounter(&start);
-   kernel_backSub<<<gridCount, blockCount>>>(dA, dX, dB, matrixSide);
-   status = cudaDeviceSynchronize();
-   if (status != cudaSuccess)
-   {
-      cout << "Unable to complete backward substitution! Press enter to"
-                                                               " continue...";
-      cin.ignore(1);
-	  exit(EXIT_FAILURE);
-   }
+   gaussianElimination(dA, dX, dB, matrixSide, gridCount, blockCount);
    //QueryPerformanceCounter(&end);
    //cout << (double)(end.QuadPart - start.QuadPart) / freq.QuadPart << ",";
 

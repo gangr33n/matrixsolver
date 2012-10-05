@@ -55,3 +55,49 @@ void displayEquation(float* A, float* X, float* B, int matrixSide)
 
    cerr << endl;
 }
+
+/**
+ *
+ */
+void gaussianElimination(float* dA, float* dX, float* dB, int matrixSide, int gridCount, int blockCount)
+{
+   int status;
+
+   /*forward elimination*/
+   kernel_forElim<<<gridCount, blockCount>>>(dA, dB, matrixSide);
+   status = cudaDeviceSynchronize();
+   if (status != cudaSuccess)
+   {
+      cout << "Unable to complete forward substitution! Press enter to"
+                                                               " continue...";
+	  cin.ignore(1);
+      exit(EXIT_FAILURE);
+   }
+
+   /*backwards substitution*/
+   kernel_backSub<<<gridCount, blockCount>>>(dA, dX, dB, matrixSide);
+   status = cudaDeviceSynchronize();
+   if (status != cudaSuccess)
+   {
+      cout << "Unable to complete backward substitution! Press enter to"
+                                                               " continue...";
+      cin.ignore(1);
+	  exit(EXIT_FAILURE);
+   }
+}
+
+/**
+ *
+ */
+void galerkin(float* dA, float* dX, float* dB, int matrixSide, int gridCount, int blockCount)
+{
+   
+}
+
+/**
+ *
+ */
+void rungekutta(float* dA, float* dX, float* dB, int matrixSide, int gridCount, int blockCount)
+{
+   
+}
